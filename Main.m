@@ -4,9 +4,9 @@ clc; close all; clear all;
 load("data_1v_4-09_100hz.mat", "Vm", "servo", "omega_c", "tsimu");
 
 % Variables
-ms  = 0.064;
-Js  = 4.129e-6;
-rs  = 0.0127;
+ms  = 0.003; % NEW VALUE
+Js  = 7.7028125e-7; % NEW VALUE
+rs  = 0.019625; % NEW VALUE
 g   = 9.81;
 km  = 0.0076776;
 kt  = 0.0076830;
@@ -16,13 +16,13 @@ Jeq = 0.0017728; % Jeq = Jm*kg.^2*ng + Jc
 ng  = 0.9;
 Kg  = 70;
 rarm= 0.0254;
-L   = 0.4254;
+L   = 0.275;
 Rm  = 3.6762;
 Beq = 0.0073; % Beq = Bm*kg.^2*ng + Bc
 N = ng*Kg;
 
 %% SM
-kbb = 5*g*rarm/(L*7);
+kbb = 3*g*rarm/(L*5); % 7 est remplacer par 5 et 5 est remplacer par 3
 
 % SM-3, valeur pour Simulink - Gcm.slx - Gsc.slx
 K_SM_3 = nm*kt*Kg*ng;
@@ -33,7 +33,7 @@ Time_servo = [tsimu servo];
 
 % SM-5, matrice 4x4 sans la variable d'etat im
 coefA = -(Rm*Beq+nm*kt*km*Kg.^2*ng)/(Rm*Jeq);
-kbb = 5*g*rarm/(L*7);
+kbb = 3*g*rarm/(L*5); % CHANGEMENT ICI AUSSI
 A1 = [0 1 0 0 ;
       0 0 kbb 0;
       0 0 0 1;
@@ -58,15 +58,15 @@ Gcm = numden2system(Gcm_num, Gcm_den);
 %disp(Gcm.p) 
 
 % FTBO entre l'angle du moteur (oc) et la position de la charge (x) - GOOD
-Gsc_num = (5*g*rarm)/(L*7);
+Gsc_num = (3*g*rarm)/(L*5); % CHANGEMENT ICI AUSSI
 Gsc_den = [1 0 0]; % division par (L*7) pour avoir forme standard
 Gsc = numden2system(Gsc_num, Gsc_den);
 % poles de la FTBO
 %disp(Gsc.p) 
 
-% SM-7, FTBO de (x)/(Vm) - GOOD
-Gsm_num = (5*g*rarm*nm*kt*Kg*ng)/(Rm*Jeq*7*L);
-Gsm_den = [1 (((Rm*Beq+nm*kt*km*Kg.^2*ng)*7*L)/(Rm*Jeq*7*L)) 0 0 0]; % division par (Rm*Jeq*7*L) pour avoir forme standard
+% SM-7, FTBO de (x)/(Vm) - GOOD !!! CHANGEMENT ICI AUSSI !!!
+Gsm_num = (3*g*rarm*nm*kt*Kg*ng)/(Rm*Jeq*5*L);
+Gsm_den = [1 (((Rm*Beq+nm*kt*km*Kg.^2*ng)*5*L)/(Rm*Jeq*5*L)) 0 0 0]; % division par (Rm*Jeq*5*L) pour avoir forme standard
 Gsm = numden2system(Gsm_num, Gsm_den);
 % poles de la FTBO
 %disp(Gsm.p)
@@ -75,6 +75,7 @@ Gsm = numden2system(Gsm_num, Gsm_den);
 %% SC 
 % Fait de son cote pour eviter de saturer le workspace
 % Valeur tirées de SC
+% LES VALEURS NE CHANGERONT PAS, Rm et Beq est du côté moteur/électrique
 Rm  = 3.6267;
 Beq = 0.0073;
 
@@ -85,7 +86,7 @@ Beq = 0.0073;
 %rlocus(Gcm) 
 %title('Lieu des racines de la fonction G_c_m')	
 
-%SI-2
+% SI-2
 Kcrit = 4.94; % a)
 ts_b = 4/16; % b) Valeur 16 = -zeta*wn pris appartir du rlocus  
 ts_c = 4./(16.019);  % c) À partir de la règle 7 Rlocus a la main
@@ -99,7 +100,7 @@ ts_c = 4./(16.019);  % c) À partir de la règle 7 Rlocus a la main
 %zeta = denGcm_BF(2)/(2*wn);
 %ts_d = 4/wn*zeta;
 
-%SI-2 F)
+% SI-2 F)
 i = (Kcrit:0.1:100);
 p_ts_cst = rlocus(Gcm.TF,i);
 phi_SI2 = pi - angle(p_ts_cst(1,:));
@@ -155,11 +156,11 @@ Gcm_int = numden2system(numInt(2,:),denInt);
 
 % SI-9 
 %La FT Gsm_int est classe 2 et la FT Gsm etait classe 3
-
+Gsm_intTF = tf(Gsm_int.num, Gsm_int.den); % AJOUT
 % SI-10
-%figure()
-%rlocus(Gsm_int)
-%title('Lieu des racines de la G_s_m de la boucle interne')
+figure()
+rlocus(Gsm_intTf)
+title('Lieu des racines de la G_s_m de la boucle interne')
 
 %% SE
 % SE-1
