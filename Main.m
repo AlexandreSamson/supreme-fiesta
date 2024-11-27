@@ -159,7 +159,7 @@ Gcm_int = numden2system(numInt(2,:),denInt);
 Gsm_intTF = tf(Gsm_int.num, Gsm_int.den); % AJOUT
 % SI-10
 figure()
-rlocus(Gsm_intTf)
+rlocus(Gsm_int.TF)
 title('Lieu des racines de la G_s_m de la boucle interne')
 
 %% SE
@@ -262,7 +262,7 @@ title('Lieu des racines de la G_s_m(s)*G_a(s)')
 figure
 margin(Gext_t.TF) % Première observation : pas assez de phase manque 3 deg
 
-info = stepinfo(Gext_t.BF)
+info = stepinfo(Gext_t.BF);
 
 %%%%%%%%%%%%%%% Temporelle section en haut 
 
