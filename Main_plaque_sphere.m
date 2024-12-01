@@ -270,7 +270,7 @@ info = stepinfo(Gext_t.BF);
 %%%% Frequentielle %%%%
 % Définition de PM et BW
 PM_f  = deg2rad(55);  
-BW_f  = 2.5;          
+BW_f  = 3.5;          
 err_f = 0.005;       
 
 % Calcul du coefficient d'amortissement zeta basé sur la marge de phase
@@ -292,7 +292,7 @@ Gext_temp_f = numden2system(Kdes_f*Gsm.num, Gsm.den);
 PMdes_f = rad2deg(PM_f);  % normal de reprendre PM initial aulieu de celui de G_ext_f?
 
 % Calcul du déphasage nécessaire pour atteindre la marge de phase désirée
-deltaPhi_f = PMdes_f - Gext_temp_f.Pm + 5 - 31.6
+deltaPhi_f = PMdes_f - Gext_temp_f.Pm + 5 - 29.1
 
 % Calcul de alpha pour le correcteur d'avance de phase
 alpha_f = (1 - sind(deltaPhi_f)) / (1 + sind(deltaPhi_f));
@@ -303,7 +303,7 @@ z_f = -1 / T_f;
 p_f = -1 / (alpha_f * T_f);  
 
 % Calcul du gain du correcteur d'avance de phase
-Ka_f = (Kdes_f / sqrt(alpha_f)) * 0.8
+Ka_f = (Kdes_f / sqrt(alpha_f)) * 0.7
 
 % Définition des coefficients du numérateur et du dénominateur du correcteur
 numAvPh_f = Ka_f * [1 1/T_f];
