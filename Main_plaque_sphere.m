@@ -113,10 +113,11 @@ Mp_SI2 = 100*exp(-pi./tan(phi_SI2));
 %ylabel('MP(%)')
 
 %SI-3
-Kint_Rac = 7.72; % trouver avec rlocus à damping = 0.8
+%Kint_Rac = 7.72; % trouver avec rlocus à damping = 0.8
 zeta_SI3 = 0.8;
 
-Kint_Calc = ((Beq*Rm+nm*kt*Kg*Kg*ng*km)/(Rm*Jeq*2*zeta_SI3)).^2 * (Rm*Jeq)/(nm*kt*Kg*ng);
+%Kint_Calc = ((Beq*Rm+nm*kt*Kg*Kg*ng*km)/(Rm*Jeq*2*zeta_SI3)).^2 * (Rm*Jeq)/(nm*kt*Kg*ng);
+Kint_Calc = 14.0546;
 Gcm_Kint = numden2system(Kint_Calc*Gcm.num,Gcm.den);
 %disp(Gcm_Kint.BF);
 
@@ -165,30 +166,30 @@ title('Lieu des racines de la G_s_m de la boucle interne')
 %% SE
 % SE-1
 %flag_in = 1; % VERIFIER SI LES 2 SIGNAUX D'ENTREE DE SIMULINK SONT PERTINENTS
-out = sim('SE_1');
-t = [out.x_sphere.Time];
-u = ones(size(t));
-
-% SE-2
-y = lsim(Gsm_int.TF ,Time_Vm(:,2),Time_Vm(:,1));
-
-figure()
-plot(Time_Vm(:,1),y)
-title('FT Gsm-int entre Vm - version linéaire')
-ylabel('Position (m)')
-xlabel('Time(s)')
-
-% Entre en echelon
-y_lin_ech = lsim(Gsm_int.BF, u, t);
-
-figure()
-plot(t, y_lin_ech)
-hold on
-plot(t, out.x_sphere.Data)
-title('Réponse à l échelon du système')
-xlabel('temps (s)')
-ylabel('Position (m)')
-legend('Linéaire', 'Non-Linéaire')
+% out = sim('SE_1');
+% t = [out.x_sphere.Time];
+% u = ones(size(t));
+% 
+% % SE-2
+% y = lsim(Gsm_int.TF ,Time_Vm(:,2),Time_Vm(:,1));
+% 
+% figure()
+% plot(Time_Vm(:,1),y)
+% title('FT Gsm-int entre Vm - version linéaire')
+% ylabel('Position (m)')
+% xlabel('Time(s)')
+% 
+% % Entre en echelon
+% y_lin_ech = lsim(Gsm_int.BF, u, t);
+% 
+% figure()
+% plot(t, y_lin_ech)
+% hold on
+% plot(t, out.x_sphere.Data)
+% title('Réponse à l échelon du système')
+% xlabel('temps (s)')
+% ylabel('Position (m)')
+% legend('Linéaire', 'Non-Linéaire')
 %plot(t, 0.98*y_lin_ech(end)*[1:1], 'r--', 'linewidth', 2);
 %plot(t, 1.02*y_lin_ech(end)*[1:1], 'r--', 'linewidth', 2);
 
@@ -268,8 +269,8 @@ info = stepinfo(Gext_t.BF);
 
 %%%% Frequentielle %%%%
 % Définition de PM et BW
-PM_f  = deg2rad(45);  
-BW_f  = 2.3;          
+PM_f  = deg2rad(55);  
+BW_f  = 3.5;          
 err_f = 0.005;       
 
 % Calcul du coefficient d'amortissement zeta basé sur la marge de phase
@@ -278,8 +279,7 @@ zeta_f = 0.5 * sqrt(tan(PM_f) * sin(PM_f));
 % Calcul du numérateur et du dénominateur pour la fréquence à laquelle la marge est mesurée
 wgNum_f = sqrt(sqrt(1 + 4 * zeta_f^4) - (2 * zeta_f^2));
 wgDen_f = sqrt((1 - 2 * zeta_f^2) + sqrt(4 * zeta_f^4 - 4 * zeta_f^2 + 2));
-wg_f = BW_f * (wgNum_f / wgDen_f);    
-%+ 0.96;  % Fréquence de croisement de la bande passante
+wg_f = BW_f * (wgNum_f / wgDen_f);  % Fréquence de croisement de la bande passante
 
 % Calcul du gain requis pour obtenir la bande passante désirée
 [mag_f, phase_f] = bode(Gsm.TF, wg_f);  
@@ -292,7 +292,7 @@ Gext_temp_f = numden2system(Kdes_f*Gsm.num, Gsm.den);
 PMdes_f = rad2deg(PM_f);  % normal de reprendre PM initial aulieu de celui de G_ext_f?
 
 % Calcul du déphasage nécessaire pour atteindre la marge de phase désirée
-deltaPhi_f = PMdes_f - Gext_temp_f.Pm + 5; %- 2.8;
+deltaPhi_f = PMdes_f - Gext_temp_f.Pm + 5 - 29.1
 
 % Calcul de alpha pour le correcteur d'avance de phase
 alpha_f = (1 - sind(deltaPhi_f)) / (1 + sind(deltaPhi_f));
@@ -303,62 +303,65 @@ z_f = -1 / T_f;
 p_f = -1 / (alpha_f * T_f);  
 
 % Calcul du gain du correcteur d'avance de phase
-Ka_f = (Kdes_f / sqrt(alpha_f)); %* 1.21
+Ka_f = (Kdes_f / sqrt(alpha_f)) * 0.7
 
 % Définition des coefficients du numérateur et du dénominateur du correcteur
 numAvPh_f = Ka_f * [1 1/T_f];
 denAvPh_f = [1 1 /(alpha_f*T_f)];
 
 % Création de la fonction de transfert du correcteur d'avance de phase
-ftGa_f = numden2system(numAvPh_f, denAvPh_f);
+ftGa_f = numden2system(numAvPh_f, denAvPh_f)
 
 % Création de la fonction de transfert totale (système corrigé)
 Gext_f = numden2system(conv(ftGa_f.num, Gsm_int.num),conv(ftGa_f.den, Gsm_int.den));
 
+
+
 figure;
 margin(Gext_f.TF)
+legend('Gext_f')
 
-figure % Cas de la réponse à l’échelon 
-t = [1:0.01:20]';
-u = ones(size(t));  % Échelon unitaire 
-% ou FTBF = feedback(FTBO,1) 
-ybf = lsim(Gext_f.BF, u, t); 
-plot(t,ybf,'b', 'linewidth', 2) 
-grid on 
-hold on 
-plot([t(1); t(end)], 0.98*ybf(end)*[1;1], 'r', 'linewidth', 2) 
-plot([t(1); t(end)], 1.02*ybf(end)*[1;1], 'r', 'linewidth', 2) 
-
-figure;
-u2 = 6*ones(size(t));
-ybf2 = lsim(Gext_f.BF, u2, t); 
-plot(t,ybf2,'b', 'linewidth', 2) 
+% FIGURE % CAS DE LA RÉPONSE À L’ÉCHELON 
+% T = [1:0.01:20]';
+% U = ONES(SIZE(T));  % ÉCHELON UNITAIRE 
+% % OU FTBF = FEEDBACK(FTBO,1) 
+% YBF = LSIM(GEXT_F.BF, U, T); 
+% PLOT(T,YBF,'B', 'LINEWIDTH', 2) 
+% GRID ON 
+% HOLD ON 
+% PLOT([T(1); T(END)], 0.98*YBF(END)*[1;1], 'R', 'LINEWIDTH', 2) 
+% PLOT([T(1); T(END)], 1.02*YBF(END)*[1;1], 'R', 'LINEWIDTH', 2) 
+% 
+% FIGURE;
+% U2 = 6*ONES(SIZE(T));
+% YBF2 = LSIM(GEXT_F.BF, U2, T); 
+% PLOT(T,YBF2,'B', 'LINEWIDTH', 2) 
 
 
 % Définir la valeur de stabilisation finale
-y_final = ybf(end);
-
-% Calcul des limites de 2%
-lim_sup = 1.02 * y_final;
-lim_inf = 0.98 * y_final;
-
-% Déterminer le temps où la réponse reste dans les limites
-idx_stable = find(ybf >= lim_inf & ybf <= lim_sup);
-
-% Vérifier à partir de quel indice la réponse reste stable
-
-for i = 1:length(idx_stable)
-    if all(ybf(idx_stable(i):end) >= lim_inf & ybf(idx_stable(i):end) <= lim_sup)
-        t_stab = t(idx_stable(i)); 
-        break;
-    end
-end
-
-% Affichage du temps de stabilisation
-fprintf('Ts (2%%) : %.2f secondes\n', t_stab);
+% y_final = ybf(end);
+% 
+% % Calcul des limites de 2%
+% lim_sup = 1.02 * y_final;
+% lim_inf = 0.98 * y_final;
+% 
+% % Déterminer le temps où la réponse reste dans les limites
+% idx_stable = find(ybf >= lim_inf & ybf <= lim_sup);
+% 
+% % Vérifier à partir de quel indice la réponse reste stable
+% 
+% for i = 1:length(idx_stable)
+%     if all(ybf(idx_stable(i):end) >= lim_inf & ybf(idx_stable(i):end) <= lim_sup)
+%         t_stab = t(idx_stable(i)); 
+%         break;
+%     end
+% end
+% 
+% % Affichage du temps de stabilisation
+% fprintf('Ts (2%%) : %.2f secondes\n', t_stab);
 
 % Ajout d'une ligne verticale sur le graphique
-if ~isnan(t_stab)
-    hold on;
-    plot([t_stab, t_stab], [0, y_final], '--g', 'LineWidth', 2);
-end
+% if ~isnan(t_stab)
+%     hold on;
+%     plot([t_stab, t_stab], [0, y_final], '--g', 'LineWidth', 2);
+% end
